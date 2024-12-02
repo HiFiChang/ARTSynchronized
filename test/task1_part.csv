@@ -1,0 +1,7 @@
+Dataset,State,Is Sorted,Insert 200M (ms),Average Height
+osm,Original,Yes,118769,4.08895
+osm,Sorted,Yes,117014,4.08895
+osm,Shuffled,No,109341,4.08894
+covid,Original,No,132155,5.87812
+covid,Sorted,Yes,125509,5.8781
+covid,Shuffled,No,115882,5.87812

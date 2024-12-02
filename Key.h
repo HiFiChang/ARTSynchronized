@@ -21,7 +21,52 @@ public:
 
     ~Key();
 
-    Key(const Key &key) = delete;
+    // Key(const Key &key) = delete;
+    Key(const Key &key) {
+        len = key.len;
+        if (len <= stackLen) {
+            memcpy(stackKey, key.stackKey, len);
+            data = stackKey;
+        } else {
+            data = new uint8_t[len];
+            memcpy(data, key.data, len);
+        }
+    }
+
+    Key& operator=(const Key &key) {
+        if (this != &key) {
+            if (len > stackLen) {
+                delete[] data;
+            }
+            len = key.len;
+            if (len <= stackLen) {
+                memcpy(stackKey, key.stackKey, len);
+                data = stackKey;
+            } else {
+                data = new uint8_t[len];
+                memcpy(data, key.data, len);
+            }
+        }
+        return *this;
+    }
+
+    Key& operator=(Key &&key) noexcept {
+        if (this != &key) {
+            if (len > stackLen) {
+                delete[] data;
+            }
+            len = key.len;
+            if (len > stackLen) {
+                data = key.data;
+                key.data = nullptr;
+            } else {
+                memcpy(stackKey, key.stackKey, len);
+                data = stackKey;
+            }
+            key.len = 0;
+        }
+        return *this;
+    }
 
     Key(Key &&key);
 
@@ -36,6 +81,13 @@ public:
         return std::memcmp(&k[0], data, getKeyLen()) == 0;
     }
 
+    bool operator<(const Key& other) const {
+        return std::lexicographical_compare(
+            this->data, this->data + this->len,
+            other.data, other.data + other.len
+        );
+    }
+
     uint8_t &operator[](std::size_t i);
 
     const uint8_t &operator[](std::size_t i) const;
@@ -43,6 +95,8 @@ public:
     KeyLen getKeyLen() const;
 
     void setKeyLen(KeyLen len);
+
+    const uint8_t* getData() const { return data; }
 
 };
 

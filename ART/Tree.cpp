@@ -25,17 +25,20 @@ namespace ART_unsynchronized {
             node = nextNode;
             switch (checkPrefix(node, k, level)) { // increases level
                 case CheckPrefixResult::NoMatch:
+                    // std::cout << "NoMatch" << std::endl;
                     return 0;
                 case CheckPrefixResult::OptimisticMatch:
                     optimisticPrefixMatch = true;
                     // fallthrough
                 case CheckPrefixResult::Match:
                     if (k.getKeyLen() <= level) {
+                        // std::cout << "Match" << std::endl;
                         return 0;
                     }
                     nextNode = N::getChild(k[level], node);
 
                     if (nextNode == nullptr) {
+                        // std::cout << "NoMatch" << std::endl;
                         return 0;
                     }
                     if (N::isLeaf(nextNode)) {
@@ -43,6 +46,7 @@ namespace ART_unsynchronized {
                         if (level < k.getKeyLen() - 1 || optimisticPrefixMatch) {
                             return checkKey(tid, k);
                         }
+                        // std::cout << "Match" << std::endl;
                         return tid;
                     }
                     level++;
@@ -506,4 +510,91 @@ namespace ART_unsynchronized {
         }
         return PCEqualsResults::BothMatch;
     }
+
+    double Tree::calculateAverageHeight() const {
+        uint64_t totalDepth = 0;
+        uint64_t leafCount = 0;
+        
+        std::function<void(const N*, uint32_t)> traverse = [&](const N* node, uint32_t depth) {
+            if (N::isLeaf(node)) {
+                totalDepth += depth;
+                leafCount++;
+            } else {
+                std::tuple<uint8_t, N*> children[256];
+                uint32_t childrenCount = 0;
+                N::getChildren(node, 0u, 255u, children, childrenCount);
+                for (uint32_t i = 0; i < childrenCount; ++i) {
+                    traverse(std::get<1>(children[i]), depth + 1);
+                }
+            }
+        };
+        
+        traverse(root, 0);
+        
+        return leafCount > 0 ? static_cast<double>(totalDepth) / leafCount : 0.0;
+    }
+
+void Tree::bulkload(const std::vector<std::pair<Key, TID>>& keyTidPairs) {
+    if (keyTidPairs.empty()) {
+        return;
+    }
+    root = bulkloadRecursive(keyTidPairs, 0);
+}
+
+N* Tree::bulkloadRecursive(const std::vector<std::pair<Key, TID>>& pairs, uint32_t depth) {
+    if (pairs.empty()) {
+        return nullptr;
+    }
+
+    // 如果只有一个键值对，直接创建叶子节点
+    if (pairs.size() == 1) {
+        return N::setLeaf(pairs[0].second);
+    }
+
+    // 1. 按当前字节将键值对分成256个分区
+    std::array<std::vector<std::pair<Key, TID>>, 256> partitions;
+    for (const auto& pair : pairs) {
+        uint8_t currentByte = (depth < pair.first.getKeyLen()) ? 
+                              pair.first[depth] : 0;
+        partitions[currentByte].push_back(pair);
+    }
+
+    // 2. 创建适当类型的内部节点
+    N* node;
+    size_t nonEmptyPartitions = 0;
+    for (const auto& partition : partitions) {
+        if (!partition.empty()) {
+            nonEmptyPartitions++;
+        }
+    }
+
+    if (nonEmptyPartitions <= 4) {
+        node = new N4(nullptr, 0);
+    } else if (nonEmptyPartitions <= 16) {
+        node = new N16(nullptr, 0);
+    } else if (nonEmptyPartitions <= 48) {
+        node = new N48(nullptr, 0);
+    } else {
+        node = new N256(nullptr, 0);
+    }
+
+    // 3. 递归处理每个非空分区，使用下一个字节
+    for (uint16_t i = 0; i < 256; i++) {
+        if (!partitions[i].empty()) {
+            // 如果分区中只有一个元素且已经到达键的末尾，创建叶子节点
+            if (partitions[i].size() == 1 && 
+                depth >= partitions[i][0].first.getKeyLen() - 1) {
+                node->insert(i, N::setLeaf(partitions[i][0].second));
+            } else {
+                // 否则递归构建子树
+                N* child = bulkloadRecursive(partitions[i], depth + 1);
+                if (child != nullptr) {
+                    node->insert(i, child);
+                }
+            }
+        }
+    }
+
+    return node;
+}
 }

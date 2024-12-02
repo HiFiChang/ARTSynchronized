@@ -16,7 +16,7 @@ namespace ART_unsynchronized {
 
     private:
 
-        N *const root;
+        N * root;
 
         TID checkKey(const TID tid, const Key &k) const;
 
@@ -73,6 +73,21 @@ namespace ART_unsynchronized {
         void insert(const Key &k, TID tid);
 
         void remove(const Key &k, TID tid);
+
+        double calculateAverageHeight() const;
+    // public:
+        // void bulkLoad(const std::vector<std::pair<Key, TID>>& kvs, N *parent, uint8_t level);
+
+        void bulkload(const std::vector<std::pair<Key, TID>>& keyTidPairs);
+        N* bulkloadRecursive(const std::vector<std::pair<Key, TID>>& keyTidPairs, uint32_t level);
+
+        // N* buildSubtree(const std::vector<std::pair<Key, TID>>& keyTidPairs, N* parentNode, uint8_t parentKey, uint32_t level);
+
+
+    // 返回 root 节点
+    N* getRoot() const {
+        return root;
+    }
     };
 }
 #endif //ARTVERSION1_SYNCHRONIZEDTREE_H

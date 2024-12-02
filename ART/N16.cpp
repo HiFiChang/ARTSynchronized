@@ -40,6 +40,8 @@ namespace ART_unsynchronized {
 
     void N16::change(uint8_t key, N *val) {
         N **childPos = const_cast<N **>(getChildPos(key));
+        // std::cout << "Key: " << static_cast<int>(key) << std::endl;
+        // std::cout << "ChildPos: " << childPos << std::endl;
         assert(childPos != nullptr);
         *childPos = val;
     }

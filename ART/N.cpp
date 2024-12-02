@@ -44,11 +44,14 @@ namespace ART_unsynchronized {
         switch (node->getType()) {
             case NTypes::N4: {
                 auto n = static_cast<N4 *>(node);
+                // std::cout << "Changing N4" << std::endl;
+                // std::cout << "Node type: " << static_cast<int>(val->getType()) << std::endl;
                 n->change(key, val);
                 return;
             }
             case NTypes::N16: {
                 auto n = static_cast<N16 *>(node);
+                // std::cout << "Changing N16" << std::endl;
                 n->change(key, val);
                 return;
             }
@@ -70,10 +73,14 @@ namespace ART_unsynchronized {
     template<typename curN, typename biggerN>
     void N::insertGrow(curN *n, N *parentNode, uint8_t keyParent, uint8_t key, N *val) {
         if (n->insert(key, val)) {
+            // std::cout << "Inserted" << std::endl;
             return;
         }
+        // std::cout << "bigger update" << std::endl;
 
         auto nBig = new biggerN(n->getPrefix(), n->getPrefixLength());
+        // 打印nBig的类型
+        // std::cout << "nBig type: " << static_cast<int>(nBig->getType()) << std::endl;
         n->copyTo(nBig);
         nBig->insert(key, val);
 
@@ -86,6 +93,7 @@ namespace ART_unsynchronized {
         switch (node->getType()) {
             case NTypes::N4: {
                 auto n = static_cast<N4 *>(node);
+                // std::cout << "Inserting into N4" << std::endl;
                 insertGrow<N4, N16>(n, parentNode, keyParent, key, val);
                 return;
             }
@@ -108,6 +116,57 @@ namespace ART_unsynchronized {
         assert(false);
         __builtin_unreachable();
     }
+    // N* N::insertWithExpansion(N *node, N *parentNode, uint8_t keyParent, uint8_t key, N *val) {
+    //     switch (node->getType()) {
+    //         case NTypes::N4: {
+    //             auto n = static_cast<N4 *>(node);
+    //             if (!n->insert(key, val)) {
+    //                 // 节点已满，扩展到 N16
+    //                 auto nBig = new N16(n->getPrefix(), n->getPrefixLength());
+    //                 n->copyTo(nBig);   // 复制 N4 节点的数据到 N16 节点
+    //                 nBig->insert(key, val);  // 插入新的子节点到 N16
+    //                 N::change(parentNode, keyParent, nBig);  // 更新父节点中的指针
+    //                 delete n;  // 删除旧的 N4 节点
+    //                 return nBig;  // 返回扩展后的新节点
+    //             }
+    //             return node;  // 插入成功，返回原节点
+    //         }
+    //         case NTypes::N16: {
+    //             auto n = static_cast<N16 *>(node);
+    //             if (!n->insert(key, val)) {
+    //                 // 节点已满，扩展到 N48
+    //                 auto nBig = new N48(n->getPrefix(), n->getPrefixLength());
+    //                 n->copyTo(nBig);   // 复制 N16 节点的数据到 N48 节点
+    //                 nBig->insert(key, val);  // 插入新的子节点到 N48
+    //                 N::change(parentNode, keyParent, nBig);  // 更新父节点中的指针
+    //                 delete n;  // 删除旧的 N16 节点
+    //                 return nBig;  // 返回扩展后的新节点
+    //             }
+    //             return node;  // 插入成功，返回原节点
+    //         }
+    //         case NTypes::N48: {
+    //             auto n = static_cast<N48 *>(node);
+    //             if (!n->insert(key, val)) {
+    //                 // 节点已满，扩展到 N256
+    //                 auto nBig = new N256(n->getPrefix(), n->getPrefixLength());
+    //                 n->copyTo(nBig);   // 复制 N48 节点的数据到 N256 节点
+    //                 nBig->insert(key, val);  // 插入新的子节点到 N256
+    //                 N::change(parentNode, keyParent, nBig);  // 更新父节点中的指针
+    //                 delete n;  // 删除旧的 N48 节点
+    //                 return nBig;  // 返回扩展后的新节点
+    //             }
+    //             return node;  // 插入成功，返回原节点
+    //         }
+    //         case NTypes::N256: {
+    //             auto n = static_cast<N256 *>(node);
+    //             n->insert(key, val);  // N256 节点无需扩展
+    //             return node;
+    //         }
+    //     }
+    //     assert(false);  // 如果类型不匹配，抛出错误
+    //     __builtin_unreachable();
+    // }
+
 
     N *N::getChild(const uint8_t k, N *node) {
         switch (node->getType()) {

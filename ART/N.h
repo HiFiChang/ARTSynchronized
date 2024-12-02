@@ -69,6 +69,8 @@ namespace ART_unsynchronized {
 
         static void insertA(N *node, N *parentNode, uint8_t keyParent, uint8_t key, N *val);
 
+        // N* insertWithExpansion(N *node, N *parentNode, uint8_t keyParent, uint8_t key, N *val);
+
         static void change(N *node, uint8_t key, N *val);
 
         static void removeA(N *node, uint8_t key, N *parentNode, uint8_t keyParent);
@@ -107,6 +109,8 @@ namespace ART_unsynchronized {
 
         static void getChildren(const N *node, uint8_t start, uint8_t end, std::tuple<uint8_t, N *> children[],
                                 uint32_t &childrenCount);
+        
+        virtual bool insert(uint8_t key, N *val) = 0;
     };
 
     class N4 : public N {

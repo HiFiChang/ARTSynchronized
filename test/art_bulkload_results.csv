@@ -1,0 +1,13 @@
+Dataset,State,Is Sorted,Bulkload Time (ms),Average Height
+osm,Original,Yes,1186,N/A
+osm,Sorted,Yes,1041,N/A
+osm,Shuffled,No,1062,N/A
+fb,Original,Yes,906,N/A
+fb,Sorted,Yes,871,N/A
+fb,Shuffled,No,814,N/A
+covid,Original,No,1121,N/A
+covid,Sorted,Yes,1177,N/A
+covid,Shuffled,No,1108,N/A
+planet,Original,No,824,N/A
+planet,Sorted,Yes,836,N/A
+planet,Shuffled,No,845,N/A
